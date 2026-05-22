@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import config from "../config";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -31,10 +32,13 @@ export const authenticate = (
   }
 
   try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) throw new Error("JWT_SECRET is not configured");
+    // const secret = process.env.JWT_SECRET;
+    // if (!secret) throw new Error("JWT_SECRET is not configured");
 
-    const decoded = jwt.verify(token, secret) as JwtPayload;
+    const decoded = jwt.verify(
+      token as string,
+      config.secret as string,
+    ) as JwtPayload;
     req.user = {
       id: decoded.id,
       name: decoded.name,
@@ -47,4 +51,19 @@ export const authenticate = (
       message: "Invalid or expired token.",
     });
   }
+};
+
+export const requireMaintainer = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (req.user?.role !== "maintainer") {
+    res.status(403).json({
+      success: false,
+      message: "Forbidden. Maintainer role required.",
+    });
+    return;
+  }
+  next();
 };

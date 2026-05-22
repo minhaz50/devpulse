@@ -1,6 +1,6 @@
 import app from "./app";
 import config from "./config";
-import { initDB } from "./db";
+import { initDB } from "./db/database";
 
 const main = () => {
   initDB();
