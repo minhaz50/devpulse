@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { registerUser, loginUser } from "./auth.service";
 
 const VALID_ROLES = ["contributor", "maintainer"];
 

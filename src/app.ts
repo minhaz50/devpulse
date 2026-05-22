@@ -3,7 +3,6 @@ import express, {
   type Request,
   type Response,
 } from "express";
-// import { authRoute } from "./modules/auth/auth.router";
 import authRouter from "./modules/auth/auth.router";
 import issuesRouter from "./modules/issues/issues.router";
 
@@ -17,4 +16,5 @@ app.get("/", (req: Request, res: Response) => {
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/issues", issuesRouter);
+
 export default app;
