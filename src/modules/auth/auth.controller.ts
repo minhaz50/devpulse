@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { registerUser, loginUser } from "./auth.service";
 
-const VALID_ROLES = ["contributor", "maintainer"];
+const ROLES = ["contributor", "maintainer"];
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -38,13 +38,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validate role if provided
     const assignedRole = role || "contributor";
-    if (!VALID_ROLES.includes(assignedRole)) {
+    if (!ROLES.includes(assignedRole)) {
       res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors: `role must be one of: ${VALID_ROLES.join(", ")}`,
+        errors: `role must be one of: ${ROLES.join(", ")}`,
       });
       return;
     }

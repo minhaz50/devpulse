@@ -3,9 +3,9 @@ import express, {
   type Request,
   type Response,
 } from "express";
-import authRouter from "./modules/auth/auth.router";
-import issuesRouter from "./modules/issues/issues.router";
 
+import authRouter from "./modules/auth/atuh.router";
+import issuesRouter from "./modules/issues/issues.router";
 const app: Application = express();
 app.use(express.json());
 

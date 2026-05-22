@@ -1,17 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { pool } from "../../db/database";
+import type { SafeUser } from "./interface";
 
 const SALT_ROUNDS = 10;
-
-export interface SafeUser {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  created_at: Date;
-  updated_at: Date;
-}
 
 export const registerUser = async (
   name: string,
@@ -24,15 +16,17 @@ export const registerUser = async (
     email,
   ]);
   if (existing.rows.length > 0) {
-    throw new Error("Email already in use");
+    throw new Error("Email already Used");
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
   const result = await pool.query(
-    `INSERT INTO users (name, email, password, role)
+    `
+    INSERT INTO users (name, email, password, role)
      VALUES ($1, $2, $3, $4)
-     RETURNING id, name, email, role, created_at, updated_at`,
+     RETURNING id, name, email, role, created_at, updated_at
+     `,
     [name, email, hashedPassword, role],
   );
 
