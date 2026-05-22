@@ -17,4 +17,9 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", authRouter);
 app.use("/api/issues", issuesRouter);
 
+// handler for 404
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
 export default app;
