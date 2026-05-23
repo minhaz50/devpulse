@@ -29,11 +29,11 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Validate password length
-    if (password.length < 6) {
+    if (password.length < 5) {
       res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors: "Password must be at least 6 characters",
+        errors: "Password must be at least 5 characters",
       });
       return;
     }
@@ -55,7 +55,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       message: "User registered successfully",
       data: user,
     });
-  } catch (err: unknown) {
+  } catch (err: any) {
     const message = err instanceof Error ? err.message : "Registration failed";
     const statusCode = message === "Email already in use" ? 409 : 500;
     res.status(statusCode).json({
