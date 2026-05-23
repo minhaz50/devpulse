@@ -1,15 +1,5 @@
 import { pool } from "../../db/database";
-
-export interface Issue {
-  id: number;
-  title: string;
-  description: string;
-  type: string;
-  status: string;
-  reporter_id: number;
-  created_at: Date;
-  updated_at: Date;
-}
+import type { Issue } from "./interface";
 
 export interface IssueWithReporter {
   id: number;
