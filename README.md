@@ -49,5 +49,6 @@ DELETE => /api/issues/:id => Maintainer only => Delete an issue </br>
 # Database schema summary
 
 Relationship — issues.reporter_id references users.id but there is no hard foreign key constraint in the DB. Validation is handled in application logic (the service layer checks the user exists via a separate query before inserting).
-updated_at — not auto-updated by Postgres. Unlike created_at which uses DEFAULT NOW(), the updated_at field must be manually set to NOW() in every UPDATE query. This is already handled in issues.service.ts.
+</br>
+updated_at — not auto-updated by Postgres. Unlike created_at which uses DEFAULT NOW(), the updated_at field must be manually set to NOW() in every UPDATE query. This is already handled in issues.service.ts. </br>
 No JOINs allowed — even though reporter_id links the two tables, the spec requires fetching reporter details with a separate WHERE id = ANY($1) query, not a SQL JOIN.
