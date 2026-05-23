@@ -12,13 +12,13 @@ Input Validation — All endpoints validate request data with clear error messag
 # Tech Stack
 
 Technology
-Node.js (LTS 24.x) ==> Runtime
-TypeScript ==> Type-safe development
-Express.js ==> HTTP server & routing
-PostgreSQL ==> Relational database
-pg (native ==> driver) Raw SQL with pool.query() — no ORM
-bcrypt ===> Password hashing (salt rounds: 10)
-jsonwebtoken ==> JWT generation & verification
+Node.js (LTS 24.x) ==> Runtime </br>
+TypeScript ==> Type-safe development </br>
+Express.js ==> HTTP server & routing </br>
+PostgreSQL ==> Relational database </br>
+pg (native ==> driver) Raw SQL with pool.query() — no ORM </br>
+bcrypt ===> Password hashing (salt rounds: 10) </br>
+jsonwebtoken ==> JWT generation & verification </br>
 
 # Setup & Installation
 
@@ -38,10 +38,16 @@ jsonwebtoken ==> JWT generation & verification
 
 # API Endpoints
 
-POST => /api/auth/signup ==> Public => Register a new user
-POST => /api/auth/login ==> Public => Login and receive JWT token
-GET => /api/issues ==> Public => Get all issues (supports filtering & sorting)
-GET => /api/issues/:id ==> Public => Get a single issue by ID
-POST => /api/issues => Authenticated => Create a new issue
-PATCH => /api/issues/:id => Authenticated => Update an issue
-DELETE => /api/issues/:id => Maintainer only => Delete an issue
+POST => /api/auth/signup ==> Public => Register a new user </br>
+POST => /api/auth/login ==> Public => Login and receive JWT token </br>
+GET => /api/issues ==> Public => Get all issues (supports filtering & sorting) </br>
+GET => /api/issues/:id ==> Public => Get a single issue by ID </br>
+POST => /api/issues => Authenticated => Create a new issue </br>
+PATCH => /api/issues/:id => Authenticated => Update an issue </br>
+DELETE => /api/issues/:id => Maintainer only => Delete an issue </br>
+
+# Database schema summary
+
+Relationship — issues.reporter_id references users.id but there is no hard foreign key constraint in the DB. Validation is handled in application logic (the service layer checks the user exists via a separate query before inserting).
+updated_at — not auto-updated by Postgres. Unlike created_at which uses DEFAULT NOW(), the updated_at field must be manually set to NOW() in every UPDATE query. This is already handled in issues.service.ts.
+No JOINs allowed — even though reporter_id links the two tables, the spec requires fetching reporter details with a separate WHERE id = ANY($1) query, not a SQL JOIN.
