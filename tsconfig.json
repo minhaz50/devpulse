@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
@@ -41,5 +42,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": []
 }

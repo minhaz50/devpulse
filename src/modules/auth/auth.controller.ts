@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { registerUser, loginUser } from "./auth.service";
+import { sendError } from "../utils/response";
 
 const ROLES = ["contributor", "maintainer"];
 
@@ -9,32 +10,30 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     // Validate required fields
     if (!name || !email || !password) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "name, email, and password are required",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "name, email, and password are required",
+      );
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "Invalid email format",
-      });
+      sendError(res, "Validation failed", 400, "Invalid email format");
       return;
     }
 
     // Validate password length
     if (password.length < 5) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "Password must be at least 5 characters",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "Password must be at least 5 characters",
+      );
       return;
     }
 

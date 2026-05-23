@@ -7,10 +7,8 @@ import {
   updateIssue,
   deleteIssue,
 } from "./issues.service";
-
-const VALID_TYPES = ["bug", "feature_request"];
-const VALID_STATUSES = ["open", "in_progress", "resolved"];
-const VALID_SORTS = ["newest", "oldest"];
+import { VALID_SORTS, VALID_STATUSES, VALID_TYPES } from "../utils/validate";
+import { sendError, sendSuccess } from "../utils/response";
 
 // GET /api/issues
 export const listIssues = async (
@@ -22,20 +20,22 @@ export const listIssues = async (
 
     // Validate query params
     if (sort && !VALID_SORTS.includes(sort)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: `sort must be one of: ${VALID_SORTS.join(", ")}`,
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "sort must be one of: newest, oldest",
+      );
       return;
     }
 
     if (type && !VALID_TYPES.includes(type)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: `type must be one of: ${VALID_TYPES.join(", ")}`,
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "type must be one of: bug, feature_request",
+      );
       return;
     }
 
@@ -50,12 +50,9 @@ export const listIssues = async (
 
     const issues = await getAllIssues(sort, type, status);
 
-    res.status(200).json({
-      success: true,
-      data: issues,
-    });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to fetch issues" });
+    sendSuccess(res, issues);
+  } catch (err) {
+    sendError(res, "Failed to fetch issues");
   }
 };
 
@@ -67,24 +64,24 @@ export const getIssue = async (
   try {
     const idParam = req.params.id;
     if (!idParam || Array.isArray(idParam)) {
-      res.status(400).json({ success: false, message: "Invalid issue ID" });
+      sendError(res, "Invalid issue ID", 400);
       return;
     }
     const id = parseInt(idParam);
     if (isNaN(id)) {
-      res.status(400).json({ success: false, message: "Invalid issue ID" });
+      sendError(res, "Invalid issue ID", 400);
       return;
     }
 
     const issue = await getIssueById(id);
     if (!issue) {
-      res.status(404).json({ success: false, message: "Issue not found" });
+      sendError(res, "Issue not found", 404);
       return;
     }
 
-    res.status(200).json({ success: true, data: issue });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to fetch issue" });
+    sendSuccess(res, issue);
+  } catch (err) {
+    sendError(res, "Failed to fetch issue");
   }
 };
 
@@ -98,56 +95,55 @@ export const createNewIssue = async (
 
     // Required field validation
     if (!title || !description || !type) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "title, description, and type are required",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "title, description, and type are required",
+      );
       return;
     }
 
     // Title max length
     if (title.length > 150) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "title must not exceed 150 characters",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "title must not exceed 150 characters",
+      );
       return;
     }
 
     // Description min length
     if (description.length < 20) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "description must be at least 20 characters",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "description must be at least 20 characters",
+      );
       return;
     }
 
     // Type validation
     if (!VALID_TYPES.includes(type)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: `type must be one of: ${VALID_TYPES.join(", ")}`,
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "type must be one of: bug, feature_request",
+      );
       return;
     }
 
-    // reporter_id comes from JWT, never from the request body
     const reporter_id = req.user!.id;
 
     const issue = await createIssue({ title, description, type, reporter_id });
 
-    res.status(201).json({
-      success: true,
-      message: "Issue created successfully",
-      data: issue,
-    });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to create issue" });
+    sendSuccess(res, issue, "Issue created successfully", 201);
+  } catch (err) {
+    sendError(res, "Failed to create issue");
   }
 };
 
@@ -159,7 +155,7 @@ export const updateExistingIssue = async (
   try {
     const idParam = req.params.id;
     if (!idParam || Array.isArray(idParam)) {
-      res.status(400).json({ success: false, message: "Invalid issue ID" });
+      sendError(res, "Invalid issue ID", 400);
       return;
     }
     const id = parseInt(idParam);
