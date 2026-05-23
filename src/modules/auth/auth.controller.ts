@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { registerUser, loginUser } from "./auth.service";
-import { sendError } from "../utils/response";
+import { sendError, sendSuccess } from "../utils/response";
 
 const ROLES = ["contributor", "maintainer"];
 
@@ -39,28 +39,22 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     const assignedRole = role || "contributor";
     if (!ROLES.includes(assignedRole)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: `role must be one of: ${ROLES.join(", ")}`,
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        `role must be one of: ${Object.values(ROLES).join(", ")}`,
+      );
       return;
     }
 
     const user = await registerUser(name, email, password, assignedRole);
 
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: user,
-    });
+    sendSuccess(res, user, "User registered successfully", 201);
   } catch (err: any) {
     const message = err instanceof Error ? err.message : "Registration failed";
     const statusCode = message === "Email already in use" ? 409 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message,
-    });
+    sendError(res, message, statusCode);
   }
 };
 
@@ -69,27 +63,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "email and password are required",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "email and password are required",
+      );
       return;
     }
 
     const { token, user } = await loginUser(email, password);
 
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      data: { token, user },
-    });
+    sendSuccess(res, { token, user }, "Login successful");
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Login failed";
     const statusCode = message === "Invalid email or password" ? 401 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message,
-    });
+    sendError(res, message, statusCode);
   }
 };
