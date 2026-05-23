@@ -12,13 +12,13 @@ Input Validation — All endpoints validate request data with clear error messag
 # Tech Stack
 
 Technology
-Node.js (LTS 24.x) ==> Runtime </br>
-TypeScript ==> Type-safe development </br>
-Express.js ==> HTTP server & routing </br>
-PostgreSQL ==> Relational database </br>
-pg (native ==> driver) Raw SQL with pool.query() — no ORM </br>
-bcrypt ===> Password hashing (salt rounds: 10) </br>
-jsonwebtoken ==> JWT generation & verification </br>
+Node.js (LTS 24.x) => Runtime </br>
+TypeScript => Type-safe development </br>
+Express.js => HTTP server & routing </br>
+PostgreSQL => Relational database </br>
+pg (native => driver) Raw SQL with pool.query() — no ORM </br>
+bcrypt => Password hashing (salt rounds: 10) </br>
+jsonwebtoken => JWT generation & verification </br>
 
 # Setup & Installation
 
@@ -38,10 +38,10 @@ jsonwebtoken ==> JWT generation & verification </br>
 
 # API Endpoints
 
-POST => /api/auth/signup ==> Public => Register a new user </br>
-POST => /api/auth/login ==> Public => Login and receive JWT token </br>
-GET => /api/issues ==> Public => Get all issues (supports filtering & sorting) </br>
-GET => /api/issues/:id ==> Public => Get a single issue by ID </br>
+POST => /api/auth/signup => Public => Register a new user </br>
+POST => /api/auth/login => Public => Login and receive JWT token </br>
+GET => /api/issues => Public => Get all issues (supports filtering & sorting) </br>
+GET => /api/issues/:id => Public => Get a single issue by ID </br>
 POST => /api/issues => Authenticated => Create a new issue </br>
 PATCH => /api/issues/:id => Authenticated => Update an issue </br>
 DELETE => /api/issues/:id => Maintainer only => Delete an issue </br>
