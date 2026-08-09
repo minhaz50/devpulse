@@ -35,4 +35,5 @@ export interface UpdateIssueInput {
   title?: string;
   description?: string;
   type?: string;
+  status?: string;
 }

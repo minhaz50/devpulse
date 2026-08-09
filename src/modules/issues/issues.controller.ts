@@ -18,7 +18,6 @@ export const listIssues = async (
   try {
     const { sort, type, status } = req.query as Record<string, string>;
 
-    // Validate query params
     if (sort && !VALID_SORTS.includes(sort)) {
       sendError(
         res,
@@ -40,18 +39,19 @@ export const listIssues = async (
     }
 
     if (status && !VALID_STATUSES.includes(status)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: `status must be one of: ${VALID_STATUSES.join(", ")}`,
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "status must be one of: open, in_progress, resolved",
+      );
       return;
     }
 
     const issues = await getAllIssues(sort, type, status);
-
     sendSuccess(res, issues);
   } catch (err) {
+    console.error("listIssues error:", err);
     sendError(res, "Failed to fetch issues");
   }
 };
@@ -62,12 +62,7 @@ export const getIssue = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const idParam = req.params.id;
-    if (!idParam || Array.isArray(idParam)) {
-      sendError(res, "Invalid issue ID", 400);
-      return;
-    }
-    const id = parseInt(idParam);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
       sendError(res, "Invalid issue ID", 400);
       return;
@@ -81,6 +76,7 @@ export const getIssue = async (
 
     sendSuccess(res, issue);
   } catch (err) {
+    console.error("getIssue error:", err);
     sendError(res, "Failed to fetch issue");
   }
 };
@@ -93,7 +89,7 @@ export const createNewIssue = async (
   try {
     const { title, description, type } = req.body;
 
-    // Required field validation
+    // Required fields
     if (!title || !description || !type) {
       sendError(
         res,
@@ -104,7 +100,7 @@ export const createNewIssue = async (
       return;
     }
 
-    // Title max length
+    // Title max 150 chars
     if (title.length > 150) {
       sendError(
         res,
@@ -115,7 +111,7 @@ export const createNewIssue = async (
       return;
     }
 
-    // Description min length
+    // Description min 20 chars
     if (description.length < 20) {
       sendError(
         res,
@@ -137,12 +133,13 @@ export const createNewIssue = async (
       return;
     }
 
+    // reporter_id always comes from JWT, never from request body
     const reporter_id = req.user!.id;
 
     const issue = await createIssue({ title, description, type, reporter_id });
-
     sendSuccess(res, issue, "Issue created successfully", 201);
   } catch (err) {
+    console.error("createIssue error:", err);
     sendError(res, "Failed to create issue");
   }
 };
@@ -153,20 +150,15 @@ export const updateExistingIssue = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const idParam = req.params.id;
-    if (!idParam || Array.isArray(idParam)) {
-      sendError(res, "Invalid issue ID", 400);
-      return;
-    }
-    const id = parseInt(idParam);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
-      res.status(400).json({ success: false, message: "Invalid issue ID" });
+      sendError(res, "Invalid issue ID", 400);
       return;
     }
 
     const issue = await getIssueById(id);
     if (!issue) {
-      res.status(404).json({ success: false, message: "Issue not found" });
+      sendError(res, "Issue not found", 404);
       return;
     }
 
@@ -174,71 +166,87 @@ export const updateExistingIssue = async (
     const isReporter = issue.reporter?.id === req.user!.id;
     const isOpen = issue.status === "open";
 
-    // Permission check:
-    // Maintainer  → can update any issue
+    // Maintainer → can update any issue
     // Contributor → can only update their OWN issue if status is still 'open'
     if (!isMaintainer && (!isReporter || !isOpen)) {
-      res.status(403).json({
-        success: false,
-        message: isMaintainer
-          ? "Forbidden"
-          : !isReporter
-            ? "You can only update your own issues"
-            : "You can only update issues that are still open",
-      });
+      sendError(
+        res,
+        !isReporter
+          ? "You can only update your own issues"
+          : "You can only update issues that are still open",
+        403,
+      );
       return;
     }
 
-    const { title, description, type } = req.body;
+    const { title, description, type, status } = req.body;
 
     // Must provide at least one field
-    if (!title && !description && !type) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors:
-          "Provide at least one field to update: title, description, or type",
-      });
+    if (!title && !description && !type && !status) {
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "Provide at least one field to update: title, description, type, or status",
+      );
       return;
     }
 
-    // Validate provided fields
+    // Title validation
     if (title !== undefined && title.length > 150) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "title must not exceed 150 characters",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "title must not exceed 150 characters",
+      );
       return;
     }
 
+    // Description validation
     if (description !== undefined && description.length < 20) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: "description must be at least 20 characters",
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "description must be at least 20 characters",
+      );
       return;
     }
 
+    // Type validation
     if (type !== undefined && !VALID_TYPES.includes(type)) {
-      res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: `type must be one of: ${VALID_TYPES.join(", ")}`,
-      });
+      sendError(
+        res,
+        "Validation failed",
+        400,
+        "type must be one of: bug, feature_request",
+      );
       return;
     }
 
-    const updated = await updateIssue(id, { title, description, type });
+    // Status validation — maintainer only
+    if (status !== undefined) {
+      if (!isMaintainer) {
+        sendError(res, "Only maintainers can change issue status", 403);
+        return;
+      }
+      if (!VALID_STATUSES.includes(status)) {
+        sendError(
+          res,
+          "Validation failed",
+          400,
+          "status must be one of: open, in_progress, resolved",
+        );
+        return;
+      }
+    }
 
-    res.status(200).json({
-      success: true,
-      message: "Issue updated successfully",
-      data: updated,
-    });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to update issue" });
+    const updated = await updateIssue(id, { title, description, type, status });
+    sendSuccess(res, updated, "Issue updated successfully");
+  } catch (err) {
+    console.error("updateIssue error:", err);
+    sendError(res, "Failed to update issue");
   }
 };
 
@@ -248,30 +256,22 @@ export const deleteExistingIssue = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const idParam = req.params.id;
-    if (!idParam || Array.isArray(idParam)) {
-      res.status(400).json({ success: false, message: "Invalid issue ID" });
-      return;
-    }
-    const id = parseInt(idParam);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
-      res.status(400).json({ success: false, message: "Invalid issue ID" });
+      sendError(res, "Invalid issue ID", 400);
       return;
     }
 
     const issue = await getIssueById(id);
     if (!issue) {
-      res.status(404).json({ success: false, message: "Issue not found" });
+      sendError(res, "Issue not found", 404);
       return;
     }
 
     await deleteIssue(id);
-
-    res.status(200).json({
-      success: true,
-      message: "Issue deleted successfully",
-    });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to delete issue" });
+    sendSuccess(res, null, "Issue deleted successfully");
+  } catch (err) {
+    console.error("deleteIssue error:", err);
+    sendError(res, "Failed to delete issue");
   }
 };
